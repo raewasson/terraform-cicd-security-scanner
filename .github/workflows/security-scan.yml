@@ -4,6 +4,10 @@ on:
   push:
     paths:
       - '**.tf'
+    branches:    
+      - '*'
+      - '!main'
+
 
 jobs:
   scan: 
@@ -12,20 +16,26 @@ jobs:
         contents: read # for checkout
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
     - name: Trivy
       uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: config
         scan-ref: 'terraform'
         hide-progress: true
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+        format: 'json'
+        output: 'trivy-results.json'
     - name: Checkov
       uses: bridgecrewio/checkov-action@v12
       with:
         directory: terraform/
         soft_fail: true
-        output_format: sarif
-        output_file_path: checkov-results.sarif
+        output_format: json
+        output_file_path: checkov-results
+    - name: Set up Python
+      uses: actions/setup-python@v6 
+      with:
+        python-version: '3.13'
+    - name: Deduplication and OWASP mapping
+      run: python scanner/scan.py
         

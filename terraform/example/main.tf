@@ -19,3 +19,42 @@ resource "aws_s3_bucket_versioning" "this_is_bad" {
     status = "Disabled"
   }
 }
+
+resource "aws_iam_role" "example" {
+  name = "example-role"
+  assume_role_policy = data.aws_iam_policy_document.dummy_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "dummy_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "too_permissive" {
+  statement {
+    effect = "Allow"
+    actions = ["*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "too_permissive" {
+  name = "too-permissive"
+  role = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.too_permissive.json
+}
+
+resource "aws_security_group" "wide_open" {
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
