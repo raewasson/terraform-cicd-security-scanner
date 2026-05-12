@@ -13,7 +13,7 @@ resource "aws_s3_bucket" "hack_me" {
   acl = "public-read-write"
 }
 
-resource "aws_s3_bucket_versioning" "versioning_is_pointless" {
+resource "aws_s3_bucket_versioning" "this_is_bad" {
   bucket = aws_s3_bucket.hack_me.id
   versioning_configuration {
     status = "Disabled"
