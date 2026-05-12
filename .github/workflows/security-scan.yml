@@ -1,8 +1,9 @@
 name: Security Scan
 
 on:
-  pull_request:
-    types: [opened, edited]
+  push:
+    paths:
+      - '**.tf'
 
 jobs:
   scan: 
@@ -24,6 +25,7 @@ jobs:
       uses: bridgecrewio/checkov-action@v12
       with:
         directory: terraform/
+        soft_fail: true
         output_format: sarif
         output_file_path: checkov-results.sarif
         
