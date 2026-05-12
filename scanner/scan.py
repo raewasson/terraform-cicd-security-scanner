@@ -14,7 +14,7 @@ DEDUP_MAP = {
 
 OWASP_MAP = {
     "iam": "OWASP AO1:2025 - Broken Access Control",
-    "encryption": "OWASP A04:2025 - Cryptographic Failures",
+    "encrypt": "OWASP A04:2025 - Cryptographic Failures",
     "logging": "OWASP A09:2025 - Security Logging and Alerting Failures"
 }
 
