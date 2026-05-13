@@ -28,7 +28,8 @@ def parse_results(trivy_path: str, checkov_path: str) -> bool:
     # only trivy findings have severity
     severity_counts = Counter(issue[0].upper() for issue in results.values() if issue[2] == "trivy")
     with open("security_report.md", "w") as f: f.write(
-        f"Total: {len(results)} (CRITICAL: {severity_counts['CRITICAL']}, HIGH: {severity_counts['HIGH']})" +
+        "# Security Scan Report\n" +
+        f"Total Findings: {len(results)} (CRITICAL: {severity_counts['CRITICAL']}, HIGH: {severity_counts['HIGH']})\n\n" +
         results_to_markdown(results)
     )
     if severity_counts['CRITICAL'] + severity_counts['HIGH'] > 0:
