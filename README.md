@@ -1,0 +1,1 @@
+GitHub Actions pipeline to audit Terraform files. Scans Terraform using Trivy and Checkov (.github/workflows/security-scan.yml). Python script parses results, deduplicates, and associates each finding with an OWASP Top 10 category (scanner/scan.py). Scan results are attached to the summary of the GitHub Action run and a PR comment that is updated on each commit.
