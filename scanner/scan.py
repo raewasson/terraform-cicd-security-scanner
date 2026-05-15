@@ -19,11 +19,12 @@ OWASP_MAP = {
     "logging": "OWASP A09:2025 - Security Logging and Alerting Failures"
 }
 
+def load_json(path: str) -> dict:
+    with open(path) as f:
+        return json.load(f)
+
 def parse_results(trivy_path: str, checkov_path: str) -> bool:
-    with open(trivy_path) as trivy_file:
-      trivy_results = json.load(trivy_file)
-    with open(checkov_path) as checkov_file:
-      checkov_results = json.load(checkov_file)
+    trivy_results, checkov_results = map(load_json, [trivy_path, checkov_path])
     results = deduplicate_results(trivy_results, checkov_results)
     # only trivy findings have severity
     severity_counts = Counter(issue[0].upper() for issue in results.values() if issue[2] == "trivy")
@@ -32,9 +33,7 @@ def parse_results(trivy_path: str, checkov_path: str) -> bool:
         f"Total Findings: {len(results)} (CRITICAL: {severity_counts['CRITICAL']}, HIGH: {severity_counts['HIGH']})\n\n" +
         results_to_markdown(results)
     )
-    if severity_counts['CRITICAL'] + severity_counts['HIGH'] > 0:
-        return True
-    return False
+    return severity_counts['CRITICAL'] + severity_counts['HIGH'] > 0
 
 def deduplicate_results(trivy_results: dict, checkov_results: dict) -> dict:
     deduped_issues = dict() # use uniqueness of dict keys to dedupe, after normalization of keys Trivy may overwrite Checkov findings

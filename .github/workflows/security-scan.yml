@@ -1,17 +1,17 @@
 name: Security Scan
 
 on:
-  push:
-    branches:    
-      - '*'
-      - '!main'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 
 jobs:
   scan: 
     runs-on: ubuntu-latest
     permissions:
-        contents: read # for checkout
+        contents: read
+        pull-requests: write
+        issues: write
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -40,7 +40,7 @@ jobs:
       id: parse
       run: |
         HIGH_SEVERITY_FINDINGS=$(python scanner/scan.py)
-        echo "HIGH_SEVERITY_FINDINGS=$HIGH_SEVERITY_FINDINGS">> $GITHUB_OUTPUT
+        echo "HIGH_SEVERITY_FINDINGS=$HIGH_SEVERITY_FINDINGS" >> $GITHUB_OUTPUT
     - name: Upload Security Report
       uses: actions/upload-artifact@v7
       with:
@@ -48,7 +48,36 @@ jobs:
         path: security_report.md
     - name: Display Report in Summary
       run: cat security_report.md >> "$GITHUB_STEP_SUMMARY"
+    - name: Comment on PR
+      uses: actions/github-script@v9
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security_report.md', 'utf8');
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          const existingComment = comments.find(comment =>
+            comment.user.login === 'github-actions[bot]'
+          );
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: report,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+          }
     - name: Fail if Critical or High Severity Findings
       if: steps.parse.outputs.HIGH_SEVERITY_FINDINGS == 'True'
       run: echo "⚠️  Job failed due to non-zero number of Critical or High severity security findings. See job summary for details." && exit 1
-        
